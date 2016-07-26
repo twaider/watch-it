@@ -1,0 +1,61 @@
+{
+  "name": "watch-it",
+  "author": "twaider",
+  "version": "1.0.0",
+  "keywords": [
+    "watchface",
+    "watch",
+    "watchit",
+    "watch-it"
+  ],
+  "private": true,
+  "dependencies": {
+    "pebble-clay": "^1.0.1"
+  },
+  "scripts": {
+    "emulator": "pebble build && pebble install --emulator basalt",
+    "config": "pebble emu-app-config",
+    "clean": "pebble clean",
+    "logs": "pebble logs",
+    "cloudpebble": "pebble build && pebble install --cloudpebble"
+  },
+  "pebble": {
+    "capabilities": [
+      "location",
+      "configurable"
+    ],
+    "displayName": "watch-it",
+    "uuid": "353852ec-fc7a-4ae1-bc85-dd95f36a64ef",
+    "sdkVersion": "3",
+    "projectType": "native",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "TEMPERATURE",
+      "UNITS",
+      "ICON",
+      "BACKGROUND_COLOR",
+      "WEATHER_ON",
+      "BACKGROUND_ON",
+      "LOCATION",
+      "WEATHER_SAFEMODE"
+    ],
+    "resources": {
+      "media": [
+        {
+          "file": "fonts/Droid.ttf",
+          "name": "FONT_PM_96",
+          "targetPlatforms": null,
+          "type": "font"
+        }
+      ]
+    }
+  }
+}
