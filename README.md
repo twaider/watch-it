@@ -1,2 +1,2 @@
-# cross-watch
-A stylish watchface
+# watch-it
+WatchIt Pebble Watchface
