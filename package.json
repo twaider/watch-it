@@ -54,6 +54,12 @@
           "name": "FONT_PM_96",
           "targetPlatforms": null,
           "type": "font"
+        },
+        {
+          "file": "fonts/pebble-weather.ttf",
+          "name": "FONT_ICON_24",
+          "targetPlatforms": null,
+          "type": "font"
         }
       ]
     }

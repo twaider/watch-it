@@ -13,19 +13,13 @@ typedef struct {
 
 static Window *s_main_window;
 static Layer *s_canvas_layer;
-static TextLayer *s_weather_layer;
-static TextLayer *s_date_layer;
-static TextLayer *s_hour_layer;
-static TextLayer *s_minute_layer;
+static TextLayer *s_weather_layer, *s_date_layer, *s_hour_layer,
+    *s_minute_layer, *s_icon_layer;
 
-static GFont s_small_font;
-static GFont s_time_font;
+static GFont s_small_font, s_time_font, s_icon_font;
 
 static GPoint s_center;
-static char s_last_hour[8];
-static char s_last_minute[8];
-static char s_last_date[16];
-static char s_last_year[16];
+static char s_last_hour[8], s_last_minute[8], s_last_date[16], s_last_year[16];
 static int background_color;
 
 static bool weather_units_conf = false;
@@ -74,6 +68,7 @@ static void inbox_received_callback(DictionaryIterator *iterator,
   if (temp_tuple && icon_tuple) {
     // Assemble strings for temp and icon
     temperature = (float)temp_tuple->value->int32;
+    temperature = (float)temp_tuple->value->int32;
 
     if (weather_units_conf) {
       snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°F",
@@ -83,8 +78,12 @@ static void inbox_received_callback(DictionaryIterator *iterator,
                temperature);
     }
 
+    snprintf(icon_buffer, sizeof(icon_buffer), "%s",
+             icon_tuple->value->cstring);
+
     // Set temp and icon to text layers
     text_layer_set_text(s_weather_layer, temperature_buffer);
+    text_layer_set_text(s_icon_layer, icon_buffer);
   }
 
   // If weather disabled, clear weather layers
@@ -242,6 +241,8 @@ static void window_load(Window *window) {
   // Set fonts
   s_time_font =
       fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PM_96));
+  s_icon_font =
+      fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICON_24));
   s_small_font = fonts_get_system_font(FONT_KEY_GOTHIC_24);
 
   s_center = grect_center_point(&window_bounds);
@@ -271,9 +272,10 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(s_minute_layer, GTextAlignmentCenter);
 
   // Create date Layer
-  s_date_layer = text_layer_create(GRect(
-      0, PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 46),
-      window_bounds.size.w / 2, 60));
+  s_date_layer = text_layer_create(
+      GRect(window_bounds.size.w / 2,
+            PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 56),
+            window_bounds.size.w / 2, 60));
 
   // Style the date text
   text_layer_set_background_color(s_date_layer, GColorClear);
@@ -283,18 +285,29 @@ static void window_load(Window *window) {
   // Create weather icon Layer
   s_weather_layer = text_layer_create(
       GRect(window_bounds.size.w / 2,
-            PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 46),
+            PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 36),
             window_bounds.size.w / 2, 60));
 
-  // Style the icon
+  // Style the weather
   text_layer_set_background_color(s_weather_layer, GColorClear);
   text_layer_set_text_color(s_weather_layer, GColorWhite);
   text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter);
+
+  // Create weather icon Layer
+  s_icon_layer = text_layer_create(GRect(
+      0, PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 43),
+      window_bounds.size.w / 2, 60));
+
+  // Style the weather icon
+  text_layer_set_background_color(s_icon_layer, GColorClear);
+  text_layer_set_text_color(s_icon_layer, GColorWhite);
+  text_layer_set_text_alignment(s_icon_layer, GTextAlignmentCenter);
 
   text_layer_set_font(s_hour_layer, s_time_font);
   text_layer_set_font(s_minute_layer, s_time_font);
   text_layer_set_font(s_date_layer, s_small_font);
   text_layer_set_font(s_weather_layer, s_small_font);
+  text_layer_set_font(s_icon_layer, s_icon_font);
 
   // Add layers
   layer_add_child(window_get_root_layer(window),
@@ -305,6 +318,8 @@ static void window_load(Window *window) {
                   text_layer_get_layer(s_date_layer));
   layer_add_child(window_get_root_layer(window),
                   text_layer_get_layer(s_weather_layer));
+  layer_add_child(window_get_root_layer(window),
+                  text_layer_get_layer(s_icon_layer));
 }
 
 static void window_unload(Window *window) {
@@ -314,7 +329,8 @@ static void window_unload(Window *window) {
   text_layer_destroy(s_minute_layer);
   text_layer_destroy(s_date_layer);
   text_layer_destroy(s_weather_layer);
-  // fonts_unload_custom_font(s_small_font);
+  text_layer_destroy(s_icon_layer);
+  fonts_unload_custom_font(s_icon_font);
   fonts_unload_custom_font(s_time_font);
 }
 
