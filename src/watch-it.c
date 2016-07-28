@@ -19,7 +19,8 @@ static TextLayer *s_weather_layer, *s_date_layer, *s_hour_layer,
 static GFont s_small_font, s_time_font, s_icon_font;
 
 static GPoint s_center;
-static char s_last_hour[8], s_last_minute[8], s_last_date[16], s_last_year[16];
+static char s_last_hour[8], s_last_minute[8], s_last_date[16], s_last_year[16],
+    s_battery_icon[8], s_battery_text[16];
 static int background_color;
 
 static bool weather_units_conf = false;
@@ -71,10 +72,10 @@ static void inbox_received_callback(DictionaryIterator *iterator,
     temperature = (float)temp_tuple->value->int32;
 
     if (weather_units_conf) {
-      snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°F",
+      snprintf(temperature_buffer, sizeof(temperature_buffer), "%d\n°F",
                temperature);
     } else {
-      snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°C",
+      snprintf(temperature_buffer, sizeof(temperature_buffer), "%d\n°C",
                temperature);
     }
 
@@ -88,7 +89,8 @@ static void inbox_received_callback(DictionaryIterator *iterator,
 
   // If weather disabled, clear weather layers
   if (!weather_on_conf) {
-    text_layer_set_text(s_weather_layer, s_last_year);
+    text_layer_set_text(s_weather_layer, s_battery_text);
+    text_layer_set_text(s_icon_layer, s_battery_icon);
   }
 
   // If background color and enabled
@@ -132,8 +134,8 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
   static bool in_interval = true;
 
-  strftime(s_last_date, sizeof(s_last_date), "%a %d", tick_time);
-  strftime(s_last_year, sizeof(s_last_year), "%Y", tick_time);
+  strftime(s_last_date, sizeof(s_last_date), "%a %d\n%Y", tick_time);
+  // strftime(s_last_year, sizeof(s_last_year), "%Y", tick_time);
 
   strftime(s_last_hour, sizeof(s_last_hour),
            clock_is_24h_style() ? "%H" : "%I:%M", tick_time);
@@ -180,9 +182,9 @@ static void update_proc(Layer *layer, GContext *ctx) {
   text_layer_set_text(s_hour_layer, s_last_hour);
   text_layer_set_text(s_minute_layer, s_last_minute);
 
-  if (!weather_on_conf) {
-    text_layer_set_text(s_weather_layer, s_last_year);
-  }
+  // if (!weather_on_conf) {
+  //   text_layer_set_text(s_weather_layer, s_last_year);
+  // }
 
   // If color screen set text color
   if (COLORS) {
@@ -234,6 +236,25 @@ static void update_proc(Layer *layer, GContext *ctx) {
   }
 }
 
+static void set_battery(int battery_level) {
+  if (battery_level / 10 <= 10 && battery_level / 10 > 7) {
+    snprintf(s_battery_icon, sizeof(s_battery_icon), "%s", "z");
+  } else if (battery_level / 10 <= 7 && battery_level / 10 > 3) {
+    snprintf(s_battery_icon, sizeof(s_battery_icon), "%s", "x");
+  } else if (battery_level / 10 <= 3 && battery_level / 10 > 0) {
+    snprintf(s_battery_icon, sizeof(s_battery_icon), "%s", "y");
+  }
+  snprintf(s_battery_text, sizeof(s_battery_text), "%d\n %%", battery_level);
+}
+
+static void battery_handler(BatteryChargeState state) {
+  if (!weather_on_conf) {
+    set_battery(state.charge_percent);
+    text_layer_set_text(s_icon_layer, s_battery_icon);
+    text_layer_set_text(s_weather_layer, s_battery_text);
+  }
+}
+
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect window_bounds = layer_get_bounds(window_layer);
@@ -242,8 +263,8 @@ static void window_load(Window *window) {
   s_time_font =
       fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PM_96));
   s_icon_font =
-      fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICON_24));
-  s_small_font = fonts_get_system_font(FONT_KEY_GOTHIC_24);
+      fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICON_28));
+  s_small_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 
   s_center = grect_center_point(&window_bounds);
 
@@ -274,7 +295,7 @@ static void window_load(Window *window) {
   // Create date Layer
   s_date_layer = text_layer_create(
       GRect(window_bounds.size.w / 2,
-            PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 56),
+            PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 51),
             window_bounds.size.w / 2, 60));
 
   // Style the date text
@@ -283,25 +304,24 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
 
   // Create weather icon Layer
-  s_weather_layer = text_layer_create(
-      GRect(window_bounds.size.w / 2,
-            PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 36),
-            window_bounds.size.w / 2, 60));
+  s_weather_layer = text_layer_create(GRect(
+      45, PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 51),
+      window_bounds.size.w / 2, 60));
 
   // Style the weather
   text_layer_set_background_color(s_weather_layer, GColorClear);
   text_layer_set_text_color(s_weather_layer, GColorWhite);
-  text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_weather_layer, GTextAlignmentLeft);
 
   // Create weather icon Layer
   s_icon_layer = text_layer_create(GRect(
-      0, PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 43),
+      10, PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 46),
       window_bounds.size.w / 2, 60));
 
   // Style the weather icon
   text_layer_set_background_color(s_icon_layer, GColorClear);
   text_layer_set_text_color(s_icon_layer, GColorWhite);
-  text_layer_set_text_alignment(s_icon_layer, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_icon_layer, GTextAlignmentLeft);
 
   text_layer_set_font(s_hour_layer, s_time_font);
   text_layer_set_font(s_minute_layer, s_time_font);
@@ -369,6 +389,11 @@ static void init() {
   window_stack_push(s_main_window, true);
 
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+
+  // Register for battery level updates
+  battery_state_service_subscribe(battery_handler);
+  // Ensure battery level is displayed from the start
+  battery_handler(battery_state_service_peek());
 
   // Register callbacks
   app_message_register_inbox_received(inbox_received_callback);

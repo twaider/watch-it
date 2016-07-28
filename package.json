@@ -13,11 +13,11 @@
     "pebble-clay": "^1.0.1"
   },
   "scripts": {
-    "emulator": "pebble build && pebble install --emulator basalt",
+    "emulator": "pebble build && pebble install --emulator basalt -vvvv",
     "config": "pebble emu-app-config",
     "clean": "pebble clean",
     "logs": "pebble logs",
-    "cloudpebble": "pebble build && pebble install --cloudpebble"
+    "cloudpebble": "pebble build && pebble install --cloudpebble -vvvv"
   },
   "pebble": {
     "capabilities": [
@@ -50,14 +50,15 @@
     "resources": {
       "media": [
         {
-          "file": "fonts/Droid.ttf",
+          "characterRegex": "[0-9]",
+          "file": "fonts/droid.ttf",
           "name": "FONT_PM_96",
           "targetPlatforms": null,
           "type": "font"
         },
         {
-          "file": "fonts/pebble-weather.ttf",
-          "name": "FONT_ICON_24",
+          "file": "fonts/weather-battery.ttf",
+          "name": "FONT_ICON_28",
           "targetPlatforms": null,
           "type": "font"
         }
