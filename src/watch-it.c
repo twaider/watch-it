@@ -19,14 +19,12 @@ static TextLayer *s_weather_layer, *s_date_layer, *s_hour_layer,
 static GFont s_small_font, s_time_font, s_icon_font;
 
 static GPoint s_center;
-static char s_last_hour[8], s_last_minute[8], s_last_date[16], s_last_year[16],
+static char s_last_hour[8], s_last_minute[8], s_last_date[16],
     s_battery_icon[8], s_battery_text[16];
-static int background_color;
+static int text1_color, text2_color;
 
-static bool weather_units_conf = false;
-static bool weather_safemode_conf = true;
-static bool weather_on_conf = false;
-static bool background_on_conf = false;
+static bool weather_units_conf = false, weather_safemode_conf = true,
+            weather_on_conf = false, text_color_on_conf = false;
 
 /*************************** appMessage **************************/
 
@@ -44,9 +42,9 @@ static void inbox_received_callback(DictionaryIterator *iterator,
       dict_find(iterator, MESSAGE_KEY_WEATHER_SAFEMODE);
   Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_TEMPERATURE);
   Tuple *icon_tuple = dict_find(iterator, MESSAGE_KEY_ICON);
-  Tuple *background_color_tuple =
-      dict_find(iterator, MESSAGE_KEY_BACKGROUND_COLOR);
-  Tuple *background_on_tuple = dict_find(iterator, MESSAGE_KEY_BACKGROUND_ON);
+  Tuple *text1_color_tuple = dict_find(iterator, MESSAGE_KEY_TEXT1_COLOR);
+  Tuple *text2_color_tuple = dict_find(iterator, MESSAGE_KEY_TEXT2_COLOR);
+  Tuple *text_color_on_tuple = dict_find(iterator, MESSAGE_KEY_TEXT_COLOR_ON);
 
   // If we get weather option
   if (weather_on_tuple) {
@@ -68,7 +66,6 @@ static void inbox_received_callback(DictionaryIterator *iterator,
   // If all data is available, use it
   if (temp_tuple && icon_tuple) {
     // Assemble strings for temp and icon
-    temperature = (float)temp_tuple->value->int32;
     temperature = (float)temp_tuple->value->int32;
 
     if (weather_units_conf) {
@@ -93,27 +90,24 @@ static void inbox_received_callback(DictionaryIterator *iterator,
     text_layer_set_text(s_icon_layer, s_battery_icon);
   }
 
-  // If background color and enabled
-  if (background_color_tuple && background_on_tuple) {
-    // Set background on/off
-    background_on_conf = (bool)background_on_tuple->value->int16;
-    persist_write_bool(MESSAGE_KEY_BACKGROUND_ON, background_on_conf);
-    // Set background color if enabled, otherwise we load the default one - red
-    background_color = background_on_conf
-                           ? (int)background_color_tuple->value->int32
-                           : 0x0055FF;
-    persist_write_int(MESSAGE_KEY_BACKGROUND_COLOR, background_color);
+  // If text color and enabled
+  if (text1_color_tuple && text2_color_tuple && text_color_on_tuple) {
+    // Set text color on/off
+    text_color_on_conf = (bool)text_color_on_tuple->value->int16;
+    persist_write_bool(MESSAGE_KEY_TEXT_COLOR_ON, text_color_on_conf);
+    // Set text1 color
+    text1_color = (int)text1_color_tuple->value->int32;
+    persist_write_int(MESSAGE_KEY_TEXT1_COLOR, text1_color);
+
+    // Set text2 color
+    text2_color = (int)text2_color_tuple->value->int32;
+    persist_write_int(MESSAGE_KEY_TEXT2_COLOR, text2_color);
   }
 
   // Redraw
   if (s_canvas_layer) {
     layer_mark_dirty(s_canvas_layer);
   }
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "weather_units_conf %d", weather_units_conf);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "weather_on_conf %d", weather_on_conf);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "background_on_conf %d", background_on_conf);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "background_color %d", background_color);
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -135,8 +129,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits changed) {
   static bool in_interval = true;
 
   strftime(s_last_date, sizeof(s_last_date), "%a %d\n%Y", tick_time);
-  strftime(s_last_hour, sizeof(s_last_hour),
-           clock_is_24h_style() ? "%H" : "%I:%M", tick_time);
+  strftime(s_last_hour, sizeof(s_last_hour), "%H", tick_time);
   strftime(s_last_minute, sizeof(s_last_minute), "%M", tick_time);
 
   if (weather_safemode_conf) {
@@ -188,14 +181,17 @@ static void update_proc(Layer *layer, GContext *ctx) {
 
   // If color screen set text color
   if (COLORS) {
-    text_layer_set_text_color(s_hour_layer, GColorFromHEX(background_color));
+    text_layer_set_text_color(s_hour_layer, GColorFromHEX(text1_color));
+    text_layer_set_text_color(s_icon_layer, GColorFromHEX(text2_color));
+    text_layer_set_text_color(s_weather_layer, GColorFromHEX(text2_color));
+    text_layer_set_text_color(s_date_layer, GColorFromHEX(text2_color));
   }
 
   // White clockface
   graphics_context_set_fill_color(ctx, GColorWhite);
 
-  graphics_context_set_fill_color(ctx, GColorFromHEX(background_color));
-  graphics_context_set_stroke_color(ctx, GColorFromHEX(background_color));
+  graphics_context_set_fill_color(ctx, GColorFromHEX(text1_color));
+  graphics_context_set_stroke_color(ctx, GColorFromHEX(text1_color));
   graphics_fill_rect(ctx, block, 0, GCornerNone);
   graphics_draw_rect(ctx, block);
 
@@ -228,8 +224,8 @@ static void update_proc(Layer *layer, GContext *ctx) {
     if (i % 4 == 0) {
       GRect h_line = GRect(i, 109, 2, 2);
 
-      graphics_context_set_fill_color(ctx, GColorFromHEX(background_color));
-      graphics_context_set_stroke_color(ctx, GColorFromHEX(background_color));
+      graphics_context_set_fill_color(ctx, GColorFromHEX(text1_color));
+      graphics_context_set_stroke_color(ctx, GColorFromHEX(text1_color));
       graphics_fill_rect(ctx, h_line, 0, GCornerNone);
       graphics_draw_rect(ctx, h_line);
     }
@@ -374,12 +370,15 @@ static void init() {
   weather_units_conf = persist_exists(MESSAGE_KEY_UNITS)
                            ? persist_read_bool(MESSAGE_KEY_UNITS)
                            : false;
-  background_on_conf = persist_exists(MESSAGE_KEY_BACKGROUND_ON)
-                           ? persist_read_bool(MESSAGE_KEY_BACKGROUND_ON)
+  text_color_on_conf = persist_exists(MESSAGE_KEY_TEXT_COLOR_ON)
+                           ? persist_read_bool(MESSAGE_KEY_TEXT_COLOR_ON)
                            : false;
-  background_color = persist_exists(MESSAGE_KEY_BACKGROUND_COLOR)
-                         ? persist_read_int(MESSAGE_KEY_BACKGROUND_COLOR)
-                         : 0x0055FF;
+  text1_color = persist_exists(MESSAGE_KEY_TEXT1_COLOR)
+                    ? persist_read_int(MESSAGE_KEY_TEXT1_COLOR)
+                    : 0x0055FF;
+  text2_color = persist_exists(MESSAGE_KEY_TEXT2_COLOR)
+                    ? persist_read_int(MESSAGE_KEY_TEXT2_COLOR)
+                    : 0xFFFFFF;
 
   window_set_window_handlers(s_main_window,
                              (WindowHandlers){

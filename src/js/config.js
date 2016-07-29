@@ -16,15 +16,21 @@ module.exports = [
       },      
       {
         "type": "toggle",
-        "messageKey": "BACKGROUND_ON",
-        "label": "Enable Custom Hours Color",
+        "messageKey": "TEXT_COLOR_ON",
+        "label": "Enable Custom Colors",
         "defaultValue": false
       },
       {
         "type": "color",
-        "messageKey": "BACKGROUND_COLOR",
+        "messageKey": "TEXT1_COLOR",
         "defaultValue": "0x0055FF",
-        "label": "Background Color"
+        "label": "Hour Text / Background Color"
+      },
+      {
+        "type": "color",
+        "messageKey": "TEXT2_COLOR",
+        "defaultValue": "0xFFFFFF",
+        "label": "Bottom Text Color"
       }
     ]
   },
@@ -69,7 +75,7 @@ module.exports = [
       },
       {
         "type": "text",
-        "defaultValue": "Input your city name and country for better results, eg: 'London, GB'. Leave empty to use location service detect automatically",
+        "defaultValue": "Input your city name and country for better results, eg: 'London, UK'. Leave empty to use location service detect automatically",
       }
     ]
   },

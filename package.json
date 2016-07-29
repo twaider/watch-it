@@ -41,9 +41,10 @@
       "TEMPERATURE",
       "UNITS",
       "ICON",
-      "BACKGROUND_COLOR",
+      "TEXT1_COLOR",
+      "TEXT2_COLOR",
       "WEATHER_ON",
-      "BACKGROUND_ON",
+      "TEXT_COLOR_ON",
       "LOCATION",
       "WEATHER_SAFEMODE"
     ],
