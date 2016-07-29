@@ -52,13 +52,13 @@
       "media": [
         {
           "characterRegex": "[0-9]",
-          "file": "fonts/droid.ttf",
+          "file": "fonts/droid_font.ttf",
           "name": "FONT_PM_96",
           "targetPlatforms": null,
           "type": "font"
         },
         {
-          "file": "fonts/weather-battery.ttf",
+          "file": "fonts/pebble_weather_battery.ttf",
           "name": "FONT_ICON_24",
           "targetPlatforms": null,
           "type": "font"
