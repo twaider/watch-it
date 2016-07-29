@@ -6,7 +6,7 @@ var clayConfig = require('./config');
 var clay = new Clay(clayConfig);
 var messageKeys = require('message_keys');
 
-var myAPIKey = '650dbfc7d1348533fdd7f1ecae2d03ca';
+var myAPIKey = '5ae4d297761d24a5e8f6be0af8fff507';
 var ICONS = {
   '01d': 'a',
   '02d': 'b',

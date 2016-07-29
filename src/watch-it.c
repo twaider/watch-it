@@ -103,11 +103,11 @@ static void inbox_received_callback(DictionaryIterator *iterator,
                            ? (int)background_color_tuple->value->int32
                            : 0x0055FF;
     persist_write_int(MESSAGE_KEY_BACKGROUND_COLOR, background_color);
+  }
 
-    // Redraw
-    if (s_canvas_layer) {
-      layer_mark_dirty(s_canvas_layer);
-    }
+  // Redraw
+  if (s_canvas_layer) {
+    layer_mark_dirty(s_canvas_layer);
   }
 
   APP_LOG(APP_LOG_LEVEL_DEBUG, "weather_units_conf %d", weather_units_conf);
@@ -135,8 +135,6 @@ static void tick_handler(struct tm *tick_time, TimeUnits changed) {
   static bool in_interval = true;
 
   strftime(s_last_date, sizeof(s_last_date), "%a %d\n%Y", tick_time);
-  // strftime(s_last_year, sizeof(s_last_year), "%Y", tick_time);
-
   strftime(s_last_hour, sizeof(s_last_hour),
            clock_is_24h_style() ? "%H" : "%I:%M", tick_time);
   strftime(s_last_minute, sizeof(s_last_minute), "%M", tick_time);
@@ -146,6 +144,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits changed) {
         tick_time->tm_hour <= SAFEMODE_OFF) {
       in_interval = false;
       APP_LOG(APP_LOG_LEVEL_INFO, "in_interval");
+    } else {
+      in_interval = true;
     }
   }
 
@@ -182,9 +182,9 @@ static void update_proc(Layer *layer, GContext *ctx) {
   text_layer_set_text(s_hour_layer, s_last_hour);
   text_layer_set_text(s_minute_layer, s_last_minute);
 
-  // if (!weather_on_conf) {
-  //   text_layer_set_text(s_weather_layer, s_last_year);
-  // }
+  if (!weather_on_conf) {
+    text_layer_set_text(s_weather_layer, s_battery_text);
+  }
 
   // If color screen set text color
   if (COLORS) {
@@ -263,7 +263,7 @@ static void window_load(Window *window) {
   s_time_font =
       fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PM_96));
   s_icon_font =
-      fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICON_28));
+      fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICON_24));
   s_small_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 
   s_center = grect_center_point(&window_bounds);
@@ -315,7 +315,7 @@ static void window_load(Window *window) {
 
   // Create weather icon Layer
   s_icon_layer = text_layer_create(GRect(
-      10, PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 46),
+      13, PBL_IF_ROUND_ELSE(window_bounds.size.h, window_bounds.size.h - 43),
       window_bounds.size.w / 2, 60));
 
   // Style the weather icon

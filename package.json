@@ -58,7 +58,7 @@
         },
         {
           "file": "fonts/weather-battery.ttf",
-          "name": "FONT_ICON_28",
+          "name": "FONT_ICON_24",
           "targetPlatforms": null,
           "type": "font"
         }
