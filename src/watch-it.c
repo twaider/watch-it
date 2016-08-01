@@ -24,7 +24,9 @@ static char s_last_hour[8], s_last_minute[8], s_last_date[16],
 static int text1_color, text2_color;
 
 static bool weather_units_conf = false, weather_safemode_conf = true,
-            weather_on_conf = false, text_color_on_conf = false;
+            weather_status_conf = false,
+            connection_status = false, weather_on_conf = false,
+            text_color_on_conf = false;
 
 /*************************** appMessage **************************/
 
@@ -38,6 +40,7 @@ static void inbox_received_callback(DictionaryIterator *iterator,
   // Read tuples for data
   Tuple *weather_units_tuple = dict_find(iterator, MESSAGE_KEY_UNITS);
   Tuple *weather_on_tuple = dict_find(iterator, MESSAGE_KEY_WEATHER_ON);
+  Tuple *weather_status_tuple = dict_find(iterator, MESSAGE_KEY_WEATHER_STATUS);
   Tuple *weather_safemode_tuple =
       dict_find(iterator, MESSAGE_KEY_WEATHER_SAFEMODE);
   Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_TEMPERATURE);
@@ -48,9 +51,16 @@ static void inbox_received_callback(DictionaryIterator *iterator,
 
   // If we get weather option
   if (weather_on_tuple) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "weather_on_tuple");
     // Set weather flag
     weather_on_conf = (bool)weather_on_tuple->value->int16;
     persist_write_bool(MESSAGE_KEY_WEATHER_ON, weather_on_conf);
+  }
+  
+  if (weather_status_tuple) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "weather_on_tuple");
+    // Set weather flag
+    weather_status_conf = (bool)weather_status_tuple->value->int16;
   }
 
   if (weather_safemode_tuple) {
@@ -65,6 +75,7 @@ static void inbox_received_callback(DictionaryIterator *iterator,
 
   // If all data is available, use it
   if (temp_tuple && icon_tuple) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "temp_tuple");
     // Assemble strings for temp and icon
     temperature = (float)temp_tuple->value->int32;
 
@@ -85,7 +96,7 @@ static void inbox_received_callback(DictionaryIterator *iterator,
   }
 
   // If weather disabled, clear weather layers
-  if (!weather_on_conf) {
+  if (!weather_on_conf || !weather_status_conf) {
     text_layer_set_text(s_weather_layer, s_battery_text);
     text_layer_set_text(s_icon_layer, s_battery_icon);
   }
@@ -175,8 +186,9 @@ static void update_proc(Layer *layer, GContext *ctx) {
   text_layer_set_text(s_hour_layer, s_last_hour);
   text_layer_set_text(s_minute_layer, s_last_minute);
 
-  if (!weather_on_conf) {
+  if (!weather_on_conf || !weather_status_conf) {
     text_layer_set_text(s_weather_layer, s_battery_text);
+    text_layer_set_text(s_icon_layer, s_battery_icon);
   }
 
   // If color screen set text color
@@ -244,11 +256,9 @@ static void set_battery(int battery_level) {
 }
 
 static void battery_handler(BatteryChargeState state) {
-  if (!weather_on_conf) {
     set_battery(state.charge_percent);
-    text_layer_set_text(s_icon_layer, s_battery_icon);
     text_layer_set_text(s_weather_layer, s_battery_text);
-  }
+    text_layer_set_text(s_icon_layer, s_battery_icon);
 }
 
 static void window_load(Window *window) {
@@ -338,6 +348,16 @@ static void window_load(Window *window) {
                   text_layer_get_layer(s_icon_layer));
 }
 
+static void app_connection_handler(bool connected) {
+  connection_status = connected;
+  APP_LOG(APP_LOG_LEVEL_INFO, "Pebble app %sconnected", connected ? "" : "dis");
+}
+
+// static void kit_connection_handler(bool connected) {
+//   connection_status = connected;
+//   APP_LOG(APP_LOG_LEVEL_INFO, "PebbleKit %sconnected", connected ? "" : "dis");
+// }
+
 static void window_unload(Window *window) {
   layer_destroy(s_canvas_layer);
   // Destroy weather elements
@@ -393,6 +413,14 @@ static void init() {
   battery_state_service_subscribe(battery_handler);
   // Ensure battery level is displayed from the start
   battery_handler(battery_state_service_peek());
+
+  connection_service_subscribe((ConnectionHandlers){
+      .pebble_app_connection_handler = app_connection_handler,
+      // .pebblekit_connection_handler = kit_connection_handler
+  });
+
+  app_connection_handler(connection_service_peek_pebble_app_connection());
+  // app_connection_handler(connection_service_peek_pebblekit_connection())
 
   // Register callbacks
   app_message_register_inbox_received(inbox_received_callback);
