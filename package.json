@@ -1,62 +1,69 @@
 {
-    "author": "twaider",
-    "dependencies": {
-        "pebble-clay": "^1.0.1"
-    },
-    "keywords": [
-        "watchface",
-        "watch",
-        "watchit",
-        "watch-it"
+  "author": "twaider",
+  "dependencies": {
+    "pebble-clay": "^1.0.1"
+  },
+  "scripts": {
+    "emulator": "pebble build && pebble install --emulator basalt -vvvv",
+    "config": "pebble emu-app-config",
+    "clean": "pebble clean",
+    "logs": "pebble logs",
+    "cloudpebble": "pebble build && pebble install --cloudpebble -vvvv"
+  },
+  "keywords": [
+    "watchface",
+    "watch",
+    "watchit",
+    "watch-it"
+  ],
+  "name": "watch-it",
+  "pebble": {
+    "capabilities": [
+      "location",
+      "configurable"
     ],
-    "name": "watch-it",
-    "pebble": {
-        "capabilities": [
-            "location",
-            "configurable"
-        ],
-        "displayName": "watch-it",
-        "enableMultiJS": true,
-        "messageKeys": [
-            "TEMPERATURE",
-            "UNITS",
-            "ICON",
-            "TEXT1_COLOR",
-            "TEXT2_COLOR",
-            "WEATHER_ON",
-            "TEXT_COLOR_ON",
-            "LOCATION",
-            "WEATHER_SAFEMODE",
-            "WEATHER_STATUS"
-        ],
-        "projectType": "native",
-        "resources": {
-            "media": [
-                {
-                    "file": "fonts/pebble_weather_battery.ttf",
-                    "name": "FONT_ICON_24",
-                    "targetPlatforms": null,
-                    "type": "font"
-                },
-                {
-                    "characterRegex": "[0-9]",
-                    "file": "fonts/droid_font.ttf",
-                    "name": "FONT_PM_96",
-                    "targetPlatforms": null,
-                    "type": "font"
-                }
-            ]
+    "displayName": "watch-it",
+    "enableMultiJS": true,
+    "messageKeys": [
+      "TEMPERATURE",
+      "UNITS",
+      "ICON",
+      "TEXT1_COLOR",
+      "TEXT2_COLOR",
+      "WEATHER_ON",
+      "TEXT_COLOR_ON",
+      "LOCATION",
+      "WEATHER_SAFEMODE",
+      "WEATHER_STATUS"
+    ],
+    "projectType": "native",
+    "resources": {
+      "media": [
+        {
+          "file": "fonts/pebble_weather_battery.ttf",
+          "name": "FONT_ICON_24",
+          "targetPlatforms": null,
+          "type": "font"
         },
-        "sdkVersion": "3",
-        "targetPlatforms": [
-            "aplite",
-            "basalt",
-            "chalk"
-        ],
-        "uuid": "353852ec-fc7a-4ae1-bc85-dd95f36a64ef",
-        "watchapp": {
-            "watchface": true
+        {
+          "characterRegex": "[0-9]",
+          "file": "fonts/droid_font.ttf",
+          "name": "FONT_PM_96",
+          "targetPlatforms": null,
+          "type": "font"
         }
+      ]
     },
-    "version": "1.0.0"
+    "sdkVersion": "3",
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk"
+    ],
+    "uuid": "353852ec-fc7a-4ae1-bc85-dd95f36a64ef",
+    "watchapp": {
+      "watchface": true
+    }
+  },
+  "version": "1.0.0"
 }
