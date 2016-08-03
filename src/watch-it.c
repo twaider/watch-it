@@ -140,7 +140,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits changed) {
   static bool in_interval = true;
 
   strftime(s_last_date, sizeof(s_last_date), "%a %d\n%Y", tick_time);
-  strftime(s_last_hour, sizeof(s_last_hour), "%H", tick_time);
+  strftime(s_last_hour, sizeof(s_last_hour), clock_is_24h_style() ? "%H" : "%I",
+           tick_time);
   strftime(s_last_minute, sizeof(s_last_minute), "%M", tick_time);
 
   if (weather_safemode_conf) {
