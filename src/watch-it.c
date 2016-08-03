@@ -139,7 +139,8 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 static void tick_handler(struct tm *tick_time, TimeUnits changed) {
   static bool in_interval = true;
 
-  strftime(s_last_date, sizeof(s_last_date), "%a %d\n%Y", tick_time);
+  strftime(s_last_date, sizeof(s_last_date),
+           PBL_IF_ROUND_ELSE("%a\n%d", "%a %d\n%Y"), tick_time);
   strftime(s_last_hour, sizeof(s_last_hour), clock_is_24h_style() ? "%H" : "%I",
            tick_time);
   strftime(s_last_minute, sizeof(s_last_minute), "%M", tick_time);
@@ -175,7 +176,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits changed) {
 
 static void update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
-  GRect block = GRect(0, 110, bounds.size.w, 60);
+  GRect block = GRect(PBL_IF_ROUND_ELSE(0, 0), PBL_IF_ROUND_ELSE(125, 110),
+                      bounds.size.w, 60);
 
   graphics_context_set_antialiased(ctx, ANTIALIASING);
 
@@ -201,15 +203,18 @@ static void update_proc(Layer *layer, GContext *ctx) {
   // White clockface
   graphics_context_set_fill_color(ctx, GColorWhite);
 
-  graphics_context_set_fill_color(ctx, GColorFromHEX(text1_color));
-  graphics_context_set_stroke_color(ctx, GColorFromHEX(text1_color));
+  graphics_context_set_fill_color(ctx, COLORS ? GColorFromHEX(text1_color)
+                                              : GColorBlack);
+  graphics_context_set_stroke_color(ctx, COLORS ? GColorFromHEX(text1_color)
+                                                : GColorBlack);
   graphics_fill_rect(ctx, block, 0, GCornerNone);
   graphics_draw_rect(ctx, block);
 
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_stroke_width(ctx, 2);
 
-  for (int i = 12; i < bounds.size.h - 70; i++) {
+  for (int i = PBL_IF_ROUND_ELSE(32, 12);
+       i < bounds.size.h - PBL_IF_ROUND_ELSE(65, 70); i++) {
     if (i % 4 == 0) {
       GRect v_line_1 = GRect(bounds.size.w / 2 - 1, i, 2, 2);
 
@@ -220,7 +225,8 @@ static void update_proc(Layer *layer, GContext *ctx) {
     }
   }
 
-  for (int i = bounds.size.h - 50; i < bounds.size.h - 10; i++) {
+  for (int i = bounds.size.h - PBL_IF_ROUND_ELSE(45, 50);
+       i < bounds.size.h - 10; i++) {
     if (i % 4 == 0) {
       GRect v_line_2 = GRect(bounds.size.w / 2 - 1, i, 2, 2);
 
@@ -233,10 +239,12 @@ static void update_proc(Layer *layer, GContext *ctx) {
 
   for (int i = 0; i < bounds.size.w; i++) {
     if (i % 4 == 0) {
-      GRect h_line = GRect(i, 109, 2, 2);
+      GRect h_line = GRect(i, PBL_IF_ROUND_ELSE(124, 109), 2, 2);
 
-      graphics_context_set_fill_color(ctx, GColorFromHEX(text1_color));
-      graphics_context_set_stroke_color(ctx, GColorFromHEX(text1_color));
+      graphics_context_set_fill_color(ctx, COLORS ? GColorFromHEX(text1_color)
+                                                  : GColorBlack);
+      graphics_context_set_stroke_color(ctx, COLORS ? GColorFromHEX(text1_color)
+                                                    : GColorBlack);
       graphics_fill_rect(ctx, h_line, 0, GCornerNone);
       graphics_draw_rect(ctx, h_line);
     }
@@ -263,12 +271,14 @@ static void window_load(Window *window) {
   layer_add_child(window_layer, s_canvas_layer);
 
   // Create time Layers
-  s_hour_layer =
-      text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(0, 0),
-                              window_bounds.size.w / 2, window_bounds.size.h));
+  s_hour_layer = text_layer_create(
+      GRect(PBL_IF_ROUND_ELSE(10, 0), PBL_IF_ROUND_ELSE(20, 0),
+            window_bounds.size.w / 2, window_bounds.size.h));
 
   s_minute_layer =
-      text_layer_create(GRect(window_bounds.size.w / 2, PBL_IF_ROUND_ELSE(0, 0),
+      text_layer_create(GRect(PBL_IF_ROUND_ELSE(window_bounds.size.w / 2 - 10,
+                                                window_bounds.size.w / 2),
+                              PBL_IF_ROUND_ELSE(20, 0),
                               window_bounds.size.w / 2, window_bounds.size.h));
 
   // Style the time text
@@ -292,10 +302,10 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentLeft);
 
   // Create weather icon Layer
-  s_icontext_layer =
-      text_layer_create(GRect(45, PBL_IF_ROUND_ELSE(window_bounds.size.h - 51,
-                                                    window_bounds.size.h - 51),
-                              window_bounds.size.w / 2, 60));
+  s_icontext_layer = text_layer_create(GRect(
+      PBL_IF_ROUND_ELSE(65, 45),
+      PBL_IF_ROUND_ELSE(window_bounds.size.h - 51, window_bounds.size.h - 51),
+      window_bounds.size.w / 2, 60));
 
   // Style the weather
   text_layer_set_background_color(s_icontext_layer, GColorClear);
@@ -303,10 +313,10 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(s_icontext_layer, GTextAlignmentLeft);
 
   // Create weather icon Layer
-  s_icon_layer =
-      text_layer_create(GRect(13, PBL_IF_ROUND_ELSE(window_bounds.size.h - 43,
-                                                    window_bounds.size.h - 43),
-                              window_bounds.size.w / 2, 60));
+  s_icon_layer = text_layer_create(GRect(
+      PBL_IF_ROUND_ELSE(33, 13),
+      PBL_IF_ROUND_ELSE(window_bounds.size.h - 43, window_bounds.size.h - 43),
+      window_bounds.size.w / 2, 60));
 
   // Style the weather icon
   text_layer_set_background_color(s_icon_layer, GColorClear);
